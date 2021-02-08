@@ -29,7 +29,6 @@ class bst
     //explicit node(node* p): content{}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
 
     node(std::pair<const key_type,value_type> c, node* p): content{c}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
-    ~node() = default;
   };
 
   /*
