@@ -1,13 +1,14 @@
 #include<iostream>
 #include<memory>
+#include<functional>
 
-template<typename key_type, typename value_type> // typename comparison_operator = std::less<key_type>
+template<typename key_type, typename value_type, typename comparison_operator = std::less<key_type>>
 class bst
 /*
  * Implements a Binary Search Tree (bst)
  *
  * authors: Crognaletti Giulio, Marchiori Pietrosanti Giulia
- *
+ * 
  */
 {
   struct node
@@ -37,11 +38,65 @@ class bst
   
   std::unique_ptr<node> root;
   std::size_t size;
+  comparison_operator op;
     
 public:
 
+  //bst() = default;
   bst(): root{nullptr}, size{0} {}
+  ~bst() = default;
   
+  //funzioni piccole ok nella classe, funzioni grandi fuori
+
+  //controlliamo le exception
+  struct iterator
+  {
+  private:
+    node* node_ptr; //std::pair<const key_type,value_type> *content_ptr = nullptr;
+  
+  public:
+    iterator() = default;
+    iterator(node *np): node_ptr{np} {};
+    ~iterator() = default;
+
+    bool operator == (iterator i) { return node_ptr == i.node_ptr; }
+    bool operator != (iterator i) { return node_ptr != i.node_ptr; }
+    std::pair<const key_type,value_type> operator * () { return node_ptr->content; }
+    std::pair<const key_type,value_type> operator -> () { return *(node_ptr->content); } //da provare e da capire
+    //*a = t
+    void next()
+    {
+      /**
+       * ho figlio destro? 
+       *  si -> vai a figlio destro e poi scendi fino al figlio più a sinistra possibile
+       *  no -> il primo padre maggiore di me
+       *    se arrivo a root -> sono il nodo finale
+       * 
+      */
+      if (node_ptr->right_child) //ho un figlio destro? se si...
+      {
+        node_ptr = (node_ptr->right_child).get();
+        while (node_ptr->left_child) { node_ptr = (node_ptr->left_child).get(); }
+      }
+      else 
+      {
+        while (node_ptr->parent && (node_ptr->content).first > (node_ptr->parent->content).first) { node_ptr = (node_ptr->parent).get(); }
+        if (!node_ptr->parent) { node_ptr = nullptr; } 
+      }
+    }
+    iterator operator ++ () 
+    {
+      this->next();
+      return *this;
+    }
+    iterator operator ++(int)
+    {
+      iterator ret = *this;
+      this->next();
+      return ret;
+    }
+  };
+
   /*
   std::pair<iterator, bool> insert(const pair_type& x);
   std::pair<iterator, bool> insert(pair_type&& x);
