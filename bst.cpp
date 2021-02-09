@@ -15,6 +15,7 @@ class bst
   /*
    * Define a single node of the bst: it contains a key-value pair, two pointers to the children and one to the parent.
    * They are implemented by means of unique pointers to ease the resource management
+   * The parent pointer does not own any resource => it is a raw pointer (it is used to ease tree traversal) 
    *
    * There is only one constructor that simply initializes each attribute with some given value
    * The destructor is default destructor
@@ -34,11 +35,12 @@ class bst
 
   /*
    * The tree is represented by a pointer to the root node and its size (the number of nodes)
+   * It also stores the comparison operator object-function => op
    */
   
   std::unique_ptr<node> root;
   std::size_t size;
-  comparison_operator op;
+  comparison_operator op; //default ctor should be called here
     
 public:
 
@@ -53,38 +55,74 @@ public:
   {
   private:
     node* node_ptr; //std::pair<const key_type,value_type> *content_ptr = nullptr;
+    //TENATIVO
+    comparison_operator op; // default ctor should be called here
   
   public:
     iterator() = default;
     iterator(node *np): node_ptr{np} {};
     ~iterator() = default;
 
-    bool operator == (iterator i) { return node_ptr == i.node_ptr; }
-    bool operator != (iterator i) { return node_ptr != i.node_ptr; }
-    std::pair<const key_type,value_type> operator * () { return node_ptr->content; }
-    std::pair<const key_type,value_type> operator -> () { return *(node_ptr->content); } //da provare e da capire
+    //copy-move constructors e volendo anche i copy-move assignement
+
+    bool operator == (const iterator i) const { return node_ptr == i.node_ptr; }
+    bool operator != (const iterator i) const { return node_ptr != i.node_ptr; }
+    std::pair<const key_type,value_type> operator * () { return node_ptr->content; } // QUESTI DUE POSSONO AVERE O NON AVERE UN CONST -> rvalue vs lvalue -> const_iterator vs iterator
+    std::pair<const key_type,value_type> operator -> () { return *(node_ptr->content); } //DA PROVARE E CAPIRE
     //*a = t
-    void next()
-    {
-      /**
-       * ho figlio destro? 
-       *  si -> vai a figlio destro e poi scendi fino al figlio più a sinistra possibile
-       *  no -> il primo padre maggiore di me
-       *    se arrivo a root -> sono il nodo finale
-       * 
-      */
-      if (node_ptr->right_child) //ho un figlio destro? se si...
+
+    /*
+    * !! NON AVEVAMO USATO IL COMPARISON OPERATOR ----> VA BENE COME HO FATTO? !!
+    *   ||
+    *   \/
+    */
+
+    void next() //QUESTO USA OP OPPURE !(OP) ? --> HO IMMAGINATO !(OP)
+    /*
+    * This method finds the next node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
+    * 
+    * The algorithm is simple and it follows this scheme:
+    * Has my node a right child ? (i.e. is there some child for which op(my_key, child_key) = false ?)
+    * 
+    *  -> YES: Then the next must be the leftmost child of my right child.
+    *  -> NO: Then the next must be the first parent of the node that satisfies op(my_key, child_key) == false
+    * 
+    * The final node is the one for wich no node satisfies the request, and it must return nullptr as a result. 
+    */ 
+     {
+      if (node_ptr->right_child) //Do I have a right child? YES...
       {
         node_ptr = (node_ptr->right_child).get();
         while (node_ptr->left_child) { node_ptr = (node_ptr->left_child).get(); }
       }
-      else 
+      else //NO ...
       {
-        while (node_ptr->parent && (node_ptr->content).first > (node_ptr->parent->content).first) { node_ptr = (node_ptr->parent).get(); }
+        while (node_ptr->parent && !op(node_ptr->content).first,(node_ptr->parent->content).first) { node_ptr = (node_ptr->parent).get(); }
         if (!node_ptr->parent) { node_ptr = nullptr; } 
       }
     }
-    iterator operator ++ () 
+
+    void prev()
+    /*
+    * This method finds the previous node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
+    * 
+    * The algortim is identical, but this time we look for key pairs satisfying the condition  op(my_key, child_key) == true.
+    * This of course implies also swapping right and left child (e.g. The question should be "Has my node a LEFT child?" this time)
+    */
+    {
+      if (node_ptr->left_child)
+      {
+        node_ptr = (node_ptr->left_child).get();
+        while (node_ptr->right_child) { node_ptr = (node_ptr->right_child).get(); }
+      }
+      else 
+      {
+        while (node_ptr->parent && op(node_ptr->content).first,(node_ptr->parent->content).first) { node_ptr = (node_ptr->parent).get(); }
+        if (!node_ptr->parent) { node_ptr = nullptr; } 
+      }
+    }
+
+    iterator operator ++() 
     {
       this->next();
       return *this;
@@ -93,6 +131,18 @@ public:
     {
       iterator ret = *this;
       this->next();
+      return ret;
+    }
+
+    iterator operator --() 
+    {
+      this->prev();
+      return *this;
+    }
+    iterator operator --(int)
+    {
+      iterator ret = *this;
+      this->prev();
       return ret;
     }
   };
