@@ -1,5 +1,6 @@
+template<typename K, typename V, typename CO>
 template<bool c>
-class iterator_class
+class bst<K,V,CO>::iterator_class
 /*
 * Implements a general bst iterator class. Bool value refers to const-ness: c=true -> const_iterator, c=false -> iterator
 */
@@ -13,56 +14,8 @@ private:
     node* node_ptr;
     comparison_operator op;
 
-    iterator_class& next()
-    /*
-    * This method finds the next node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
-    * 
-    * The algorithm is simple and it follows this scheme:
-    * Has my node a right child ? (i.e. is there some child for which op(my_key, child_key) = false ?)
-    * 
-    *  -> YES: Then the next must be the leftmost child of my right child.
-    *  -> NO: Then the next must be the first parent of the node that satisfies op(my_key, child_key) == false
-    * 
-    * The final node is the one for wich no node satisfies the request, and it must return nullptr as a result. 
-    */ 
-    {
-        if (node_ptr->right_child) //Do I have a right child? YES...
-        {
-            node_ptr = (node_ptr->right_child).get();
-            while (node_ptr->left_child) { node_ptr = (node_ptr->left_child).get(); }
-        }
-        else //NO ...
-        {
-            while (node_ptr->parent && !op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
-            if (!node_ptr->parent) { node_ptr = nullptr; } 
-            else { node_ptr = node_ptr->parent; }
-        }
-
-        return *this;
-    }
-
-    iterator_class& prev()
-    /*
-    * This method finds the previous node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
-    * 
-    * The algortim is identical, but this time we look for key pairs satisfying the condition  op(my_key, child_key) == true.
-    * This of course implies also swapping right and left child (e.g. The question should be "Has my node a LEFT child?" this time)
-    */
-    {
-        if (node_ptr->left_child)
-        {
-            node_ptr = (node_ptr->left_child).get();
-            while (node_ptr->right_child) { node_ptr = (node_ptr->right_child).get(); }
-        }
-        else 
-        {
-            while (node_ptr->parent && op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
-            if (!node_ptr->parent) { node_ptr = nullptr; }
-            else { node_ptr = node_ptr->parent; } 
-        }
-
-        return *this;
-    }
+    iterator_class& next();
+    iterator_class& prev();
 
 public:
 
@@ -104,7 +57,58 @@ public:
     }
 };
 
-using iterator = iterator_class<false>;
-using const_iterator = iterator_class<true>;
+template<typename K, typename V, typename CO>
+template<bool c>
+bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::next()
+/*
+* This method finds the next node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
+* 
+* The algorithm is simple and it follows this scheme:
+* Has my node a right child ? (i.e. is there some child for which op(my_key, child_key) = false ?)
+* 
+*  -> YES: Then the next must be the leftmost child of my right child.
+*  -> NO: Then the next must be the first parent of the node that satisfies op(my_key, child_key) == false
+* 
+* The final node is the one for wich no node satisfies the request, and it must return nullptr as a result. 
+*/ 
+{
+    if (node_ptr->right_child) //Do I have a right child? YES...
+    {
+        node_ptr = (node_ptr->right_child).get();
+        while (node_ptr->left_child) { node_ptr = (node_ptr->left_child).get(); }
+    }
+    else //NO ...
+    {
+        while (node_ptr->parent && !op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
+        if (!node_ptr->parent) { node_ptr = nullptr; } 
+        else { node_ptr = node_ptr->parent; }
+    }
 
-static const_iterator iterator_to_const(iterator it) {return const_iterator(it.get());}
+    return *this;
+}
+
+template<typename K, typename V, typename CO>
+template<bool c>
+bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::prev()
+/*
+* This method finds the previous node in the BST from the one pointed by the iterator, based on the comparison operator defined inside bst used on keys.
+* 
+* The algortim is identical, but this time we look for key pairs satisfying the condition  op(my_key, child_key) == true.
+* This of course implies also swapping right and left child (e.g. The question should be "Has my node a LEFT child?" this time)
+*/
+{
+    if (node_ptr->left_child)
+    {
+        node_ptr = (node_ptr->left_child).get();
+        while (node_ptr->right_child) { node_ptr = (node_ptr->right_child).get(); }
+    }
+    else 
+    {
+        while (node_ptr->parent && op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
+        if (!node_ptr->parent) { node_ptr = nullptr; }
+        else { node_ptr = node_ptr->parent; } 
+    }
+
+    return *this;
+}
+

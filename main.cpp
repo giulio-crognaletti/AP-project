@@ -15,18 +15,24 @@ int main(int argc, char** argv)
 
   PT a {67,"zeb89"};
   my_bst.insert(a);
+  my_bst.emplace(67,"zeb89 emplaced");
   
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
 
   bst<K,V>::iterator it = my_bst.begin();
-  it->second = "uanm";
-  bst<K,V>::const_iterator c_it = bst<K,V>::iterator_to_const(it);
+  bst<K,V>::const_iterator c_it = iterator_to_const(it);
+
+  std::cout << my_bst[75] << std::endl;
+  std::cout << my_bst[100] << std::endl;
 
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
 
-  //bst<K,V> my_bst2 {my_bst};
+  /*const bst<K,V> my_bst2 {{75,"berlino"},{1,"andiamo"},{3,"a"},{88,"Beppe!"},{60,"maanz"}};
+  c_it = my_bst2.find(75);
+  std::cout << c_it->second << std::endl;
+  std::cout << my_bst2 << std::endl;*/
 
   return 0;
 
