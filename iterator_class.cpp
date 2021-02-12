@@ -19,14 +19,12 @@ private:
 
 public:
 
-    node* get() {return node_ptr;}
-
     //ctors -> EXCEPTIONS
     iterator_class() = default;
     iterator_class(const iterator_class &) = default;
     iterator_class(iterator_class &&) = default;
 
-    explicit iterator_class(node *np): node_ptr{np}, op{} {};
+    explicit iterator_class(node *np): node_ptr{np} {};
 
     //dtor
     ~iterator_class() = default;
@@ -59,7 +57,7 @@ public:
     iterator_class left() { return iterator(node_ptr->left_child); }
     iterator_class right() { return iterator(node_ptr->right_child); }
     
-    operator bool() { return (bool)node_ptr; }
+    operator bool() const { return (bool)node_ptr; }
     
 };
 

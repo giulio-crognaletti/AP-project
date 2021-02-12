@@ -1,5 +1,5 @@
 template<typename K, typename V, typename CO>
-bst<K,V,CO> bst<K,V,CO>::deepcopy()
+bst<K,V,CO> bst<K,V,CO>::deepcopy() const
 /*
 * genera un albero vuoto
 * condizione: copiato non ha null && find=end() (per evitare di copiare i figli due volte)
@@ -8,17 +8,25 @@ bst<K,V,CO> bst<K,V,CO>::deepcopy()
 * 
 */
 {
-    bst<K,V,CO> *nt = new bst<K,V,CO> {};
-    node *position = root.get();
+  bst nt {};
+  node *position = root.get();
 
-    if(position) nt->insert(position->content);
-    while(size > nt->get_size())
-    {
-        if(position->left_child && (nt->find((position->left_child->content).first) == nt->end())) { position = position->left_child.get(); nt->insert(position->content); }
-        else if(position->right_child && (nt->find((position->right_child->content).first) == nt->end())) { position = position->right_child.get(); nt->insert(position->content); }
-        else { position = position->parent; }
+  if(position) nt.insert(position->content);
+  while(size > nt.get_size())
+  {
+    if(position->left_child && (nt.find((position->left_child->content).first) == nt.end())) 
+    { 
+      position = position->left_child.get(); 
+      nt.insert(position->content); 
     }
-    return std::move(*nt);
+    else if(position->right_child && (nt.find((position->right_child->content).first) == nt.end())) 
+    { 
+      position = position->right_child.get(); 
+      nt.insert(position->content); 
+    }
+    else { position = position->parent; }
+  }
+  return nt;
 }
 
 template<typename K, typename V, typename CO>
@@ -58,6 +66,18 @@ typename bst<K,V,CO>::node* bst<K,V,CO>::node_find(const typename bst<K,V,CO>::k
     position = op(x,(position->content).first) ? (position->left_child).get() : (position->right_child).get();
   }
   return nullptr;
+}
+
+template<typename K, typename V, typename CO>
+typename bst<K,V,CO>::value_type& bst<K,V,CO>::operator[](const typename bst<K,V,CO>::key_type& x)
+{
+  iterator it {find(x)};
+  if(!it) 
+  {
+    V val {};
+    it = emplace(x, val).first;
+  }
+  return it->second;
 }
 
 /*template<typename K, typename V, typename CO>
