@@ -25,11 +25,11 @@ int main(int argc, char** argv)
   std::cout << "Binary Search Tree: list of all " << my_bst2.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst2 << std::endl;
 
-  bst<K,V> my_bst3 {};
-  my_bst3 = std::move(my_bst);
+  //my_bst2.erase(3);
 
-  std::cout << "Binary Search Tree: list of all " << my_bst3.get_size() << " (key,value) pairs. \n => ";
-  std::cout << my_bst3 << std::endl;
+  //std::cout << "Binary Search Tree: list of all " << my_bst2.get_size() << " (key,value) pairs. \n => ";
+  bst<K,V>::iterator it {my_bst2.begin()};
+  //std::cout << my_bst2 << std::endl;
   
   /*const bst<K,V> my_bst2 {{75,"berlino"},{1,"andiamo"},{3,"a"},{88,"Beppe!"},{60,"maanz"}};
   c_it = my_bst2.find(75);

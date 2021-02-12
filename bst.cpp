@@ -29,11 +29,15 @@ class bst
    */
   {
     pair_type content;
+    //std::unique_ptr<pair_type> content;
     std::unique_ptr<node> left_child;
     std::unique_ptr<node> right_child;
     node* parent;
 
     node(pair_type c, node* p): content{c}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
+    //node(pair_type &&c, node* p): content{new pair_type(std::move(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
+    //node(const pair_type &c, node* p): content{new pair_type(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
+
     explicit node(node* p): content{}, parent{p} ,left_child{nullptr}, right_child{nullptr} {}
   };
 
@@ -44,18 +48,8 @@ class bst
   std::unique_ptr<node> root;
   std::size_t size;
 
-  comparison_operator op;
+  inline static constexpr comparison_operator op {};
 
-  node* node_find(const key_type& x) const; //conversione end = false in boolean
-  node* node_begin() const 
-  {
-    node *position  = root.get();
-    if(position) { while(position->left_child) position = (position->left_child).get(); }
-
-    return position;
-  }
-  node* node_end() const { return nullptr; }
-    
 public:
 
   template<bool c>
@@ -68,7 +62,7 @@ public:
   ~bst() = default;
 
   //custom ctor: controllare exception
-  bst(std::initializer_list<pair_type> lst) : size{0}, root{nullptr}, op{} { for(auto i : lst) insert(i); }
+  bst(std::initializer_list<pair_type> lst) : size{0}, root{nullptr} { for(auto i : lst) insert(i); }
   
   //copy (deepcopy) and move semantics
   bst deepcopy() const; 
@@ -81,7 +75,8 @@ public:
   
   std::size_t get_size() { return size; }
 
-  std::pair<iterator, bool> insert(const pair_type& x); //min. 01:44:58 forwarding reference r and l value
+  std::pair<iterator, bool> insert(const pair_type& x) { return pinsert(x); }
+  std::pair<iterator, bool> insert(pair_type&& x) { return pinsert(std::move(x)); }
   
   iterator find(const key_type& x) { return iterator(node_find(x)); }
   const_iterator find(const key_type& x) const { return const_iterator(node_find(x)); }
@@ -99,29 +94,48 @@ public:
   template< class... Types >
   std::pair<iterator,bool> emplace(Types&&... args) { return insert(pair_type(std::forward<Types>(args)...)); }
 
-  value_type& operator[](const key_type& x);
-
+  value_type& operator[](const key_type& x) { return subscript(x); };
+  value_type& operator[](key_type&& x) { return subscript(std::move(x)); };
 
   void erase(const key_type& x);
 
   /*
-  std::pair<iterator, bool> insert(const pair_type& x);
-  std::pair<iterator, bool> insert(pair_type&& x);
-
   void balance();
-
-  value_type& operator[](const key_type& x);
-  value_type& operator[](key_type&& x);
-
   void erase(const key_type& x);
   */
 
   friend
   std::ostream& operator<<(std::ostream& os, const bst& x)
   {
-    for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") "; }
+    for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") ";}
     return os;
   }
+
+
+private:
+  /*
+  * Auxiliary functions: they are stated as private and used throughout the class to ease maintenance and readability of the code
+  */
+
+  node* node_find(const key_type& x) const;
+  node* node_begin() const 
+  {
+    node *position  = root.get();
+    if(position) { while(position->left_child) position = (position->left_child).get(); }
+
+    return position;
+  }
+  node* node_end() const { return nullptr; }
+
+  template<typename RT>
+  std::pair<iterator, bool> pinsert(RT&& x);
+
+  template<typename RT>
+  value_type& subscript(RT&& x);
+
+
+  void swap(iterator &a, iterator &b);
+  void clear_subtree (iterator &a);
 };
 
 #include "iterator_class.cpp"

@@ -12,12 +12,13 @@ class bst<K,V,CO>::iterator_class
 private:
 
     node* node_ptr;
-    comparison_operator op;
 
     iterator_class& next();
     iterator_class& prev();
 
 public:
+
+    enum class childness {right, left, orphan};
 
     //ctors -> EXCEPTIONS
     iterator_class() = default;
@@ -54,11 +55,18 @@ public:
       return ret;
     }
 
-    iterator_class left() { return iterator(node_ptr->left_child); }
-    iterator_class right() { return iterator(node_ptr->right_child); }
+    iterator_class parent() const { return iterator_class(node_ptr->parent); }
+    iterator_class left() const { return iterator_class((node_ptr->left_child).get()); }
+    iterator_class right() const { return iterator_class((node_ptr->right_child).get()); }
     
     operator bool() const { return (bool)node_ptr; }
-    
+    operator node*() const {return node_ptr; }
+
+    childness childness() const 
+    { 
+      if(!node_ptr->parent) return childness::orphan;
+      return op((node_ptr->parent->content).first,(node_ptr->content).first) ? childness::right : childness::left; 
+    }
 };
 
 template<typename K, typename V, typename CO>
@@ -83,7 +91,7 @@ bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::next()
     }
     else //NO ...
     {
-        while (node_ptr->parent && !op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
+        while (node_ptr->parent && !bst::op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
         if (!node_ptr->parent) { node_ptr = nullptr; } 
         else { node_ptr = node_ptr->parent; }
     }
@@ -108,11 +116,10 @@ bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::prev()
     }
     else 
     {
-        while (node_ptr->parent && op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
+        while (node_ptr->parent && bst::op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
         if (!node_ptr->parent) { node_ptr = nullptr; }
         else { node_ptr = node_ptr->parent; } 
     }
 
     return *this;
 }
-
