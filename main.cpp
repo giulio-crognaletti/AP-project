@@ -20,14 +20,13 @@ int main(int argc, char** argv)
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
 
-  bst<K,V>::iterator it = my_bst.begin();
-  bst<K,V>::const_iterator c_it = iterator_to_const(it);
+  my_bst[61] = "hello";
+  my_bst[4];
 
-  std::cout << my_bst[75] << std::endl;
-  std::cout << my_bst[100] << std::endl;
 
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
+
 
   /*const bst<K,V> my_bst2 {{75,"berlino"},{1,"andiamo"},{3,"a"},{88,"Beppe!"},{60,"maanz"}};
   c_it = my_bst2.find(75);

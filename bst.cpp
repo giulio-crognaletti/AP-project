@@ -44,6 +44,16 @@ class bst
   std::unique_ptr<node> root;
   std::size_t size;
   comparison_operator op; //default ctor should be called here
+
+  node* node_find(const key_type& x) const; //conversione end = false in boolean
+  node* node_begin() const 
+  {
+    node *position  = root.get();
+    if(position) { while(position->left_child) position = (position->left_child).get(); }
+
+    return position;
+  }
+  node* node_end() const { return nullptr; }
     
 public:
 
@@ -52,12 +62,6 @@ public:
 
   using iterator = iterator_class<false>;
   using const_iterator = iterator_class<true>;
-
-  friend const_iterator iterator_to_const(iterator &it) { return const_iterator(it.get()); }
-  friend const_iterator iterator_to_const(iterator &&it) { return const_iterator(it.get()); }
-
-  friend iterator const_iterator_to_no(const_iterator &c_it) { return iterator(c_it.get()); }
-  friend iterator const_iterator_to_no(const_iterator &&c_it) { return iterator(c_it.get()); }
 
   bst() = default;
   bst(bst&&) = default;
@@ -69,26 +73,18 @@ public:
 
   std::size_t get_size() { return size; }
 
-  std::pair<iterator, bool> insert(const pair_type& x);
-
-  const_iterator cfind(const key_type& x) const; //conversione end = false in boolean
+  std::pair<iterator, bool> insert(const pair_type& x); //min. 01:44:58 forwarding reference r and l value
   
-  iterator find(const key_type& x) { return const_iterator_to_no(cfind(x)); }
-  const_iterator find(const key_type& x) const { return find(x); }
+  iterator find(const key_type& x) { return iterator(node_find(x)); }
+  const_iterator find(const key_type& x) const { return const_iterator(find(x)); }
 
-  iterator begin() { return const_iterator_to_no(cbegin()); }
+  iterator begin() { return iterator(node_begin()); }
   const_iterator begin() const { return cbegin(); }
-  const_iterator cbegin() const
-  {
-    node *position  = root.get();
-    if(position) { while(position->left_child) position = (position->left_child).get(); }
+  const_iterator cbegin() const { return const_iterator(node_begin());}
 
-    return const_iterator(position);
-  }
-
-  iterator end() { return iterator(nullptr); }
+  iterator end() { return iterator(node_end()); }
   const_iterator end() const { return cend(); } 
-  const_iterator cend() const { return const_iterator(nullptr); }
+  const_iterator cend() const { return const_iterator(node_end()); }
 
   void clear() { size = 0; root.reset(nullptr); }
 
@@ -98,11 +94,19 @@ public:
   value_type& operator[](const key_type& x)
   {
     iterator it {find(x)};
-    if( it == end() ) it = insert(.?.)->first;
+    if(!it) 
+    {
+      V val {};
+      it = emplace(x, val).first;
+    }
     return it->second;
   }
 
   bst deepcopy();
+
+  void swap(const iterator& it1, const iterator& it2);
+  void erase(const key_type& x);
+
   /*
   std::pair<iterator, bool> insert(const pair_type& x);
   std::pair<iterator, bool> insert(pair_type&& x);

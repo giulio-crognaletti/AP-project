@@ -55,6 +55,12 @@ public:
       this->prev();
       return ret;
     }
+
+    iterator_class left() { return iterator(node_ptr->left_child); }
+    iterator_class right() { return iterator(node_ptr->right_child); }
+    
+    operator bool() { return (bool)node_ptr; }
+    
 };
 
 template<typename K, typename V, typename CO>
