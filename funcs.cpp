@@ -1,44 +1,12 @@
 template<typename K, typename V, typename CO>
-bst<K,V,CO> bst<K,V,CO>::deepcopy() const
-/*
-* genera un albero vuoto
-* condizione: copiato non ha null && find=end() (per evitare di copiare i figli due volte)
-* se condizione -> copia nodo e scendi;
-* altrimenti risali;
-* 
-*/
-{
-  bst nt {};
-  const_iterator position {root_it()};
-
-  if(position) nt.insert(*position);
-  while(size > nt.get_size())
-  {
-    std::cout << nt.get_size() <<std::endl;
-    if(position.left() && !nt.find(position.left()->first)) 
-    { 
-      position = position.left(); 
-      nt.insert(*position); 
-    }
-    else if(position.right() && !nt.find(position.right()->first)) 
-    { 
-      position = position.right(); 
-      nt.insert(*position); 
-    }
-    else { position = position.parent(); }
-  }
-  return nt;
-}
-
-template<typename K, typename V, typename CO>
 template<typename RT>
-std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::_insert(RT&& x) // COS'E STO TYPE NAME??
+std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::_insert(RT&& x)
 {
   iterator it = find(x.first);
   if(it) { return std::pair<iterator, bool>(it, false); }
   else 
   {
-    iterator child, position = root_it();
+    iterator child, position {root.get()};
     if(position) 
     {
       while((child = op(x.first,position->first) ? position.left() : position.right())) { position = child; } //Doulbe parenthesis as requested by the "-Wparenthesis warning"
@@ -61,21 +29,59 @@ std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::_insert(RT&& x) // C
     {
       root.reset(new node(std::forward<RT>(x),nullptr));
       ++size;
-      return std::pair<iterator, bool>(root_it(), true);
+      return std::pair<iterator, bool>(const_iterator(root.get()), true);
     }
   }
 }
 
 template<typename K, typename V, typename CO>
+typename bst<K,V,CO>::node* bst<K,V,CO>::node_begin() const 
+{
+  const_iterator position {root.get()};
+  if(position) { while(position.left()) position = position.left(); }
+
+  return static_cast<node*>(position);
+}
+
+template<typename K, typename V, typename CO>
 typename bst<K,V,CO>::node* bst<K,V,CO>::node_find(const typename bst<K,V,CO>::key_type& x) const //DI NUOVO STO TYPRNAME?
 {
-  const_iterator position = root_it();
+  const_iterator position {root.get()};
   while(position)
   {
     if(position->first == x) { return static_cast<node*>(position); }
     position = op(x,position->first) ? position.left() : position.right();
   }
   return nullptr;
+}
+
+template<typename K, typename V, typename CO>
+void bst<K,V,CO>::balance()
+{
+  if(!size) return;
+
+  bst nt {};
+  pair_type* contents[size];
+  
+  int i = 0;
+  for(iterator it = begin(); it != end(); ++it) { contents[i++] = &(*it);}
+
+  recursive_insert(nt,contents,size,0);
+  *this = std::move(nt);
+}
+
+template<typename K, typename V, typename CO>
+void bst<K,V,CO>::recursive_insert(bst<K,V,CO> &nt, bst<K,V,CO>::pair_type** contents,int n_elem, int start_pt)
+{
+  nt.insert(std::move(*contents[start_pt+n_elem/2])); //THIS LEAVES *THIS IN AN UNSPECIFIED STATE, SO IT MUST BE MOVED AGAIN
+
+  int elem_first_half = n_elem/2;
+  int elem_second_half = n_elem-1-n_elem/2;
+
+  if(elem_first_half > 0) recursive_insert(nt,contents,elem_first_half,start_pt);
+  if(elem_second_half > 0) recursive_insert(nt,contents,elem_second_half,start_pt+elem_first_half+1);
+
+  return;
 }
 
 template<typename K, typename V, typename CO>
@@ -89,6 +95,14 @@ typename bst<K,V,CO>::value_type& bst<K,V,CO>::subscript(RT&& x)
     it = emplace(std::forward<RT>(x), val).first;
   }
   return it->second;
+}
+
+template<typename K, typename V, typename CO>
+std::ostream& operator<<(std::ostream& os, const bst<K,V,CO>& x)
+{
+  os << "["<<x.size<<"] ";
+  for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") ";}
+  return os;
 }
 
 template<typename K, typename V, typename CO>
@@ -146,47 +160,32 @@ void bst<K,V,CO>::clear_subtree (bst<K,V,CO>::iterator &a, bst<K,V,CO>::childnes
 };
 
 template<typename K, typename V, typename CO>
-void bst<K,V,CO>::recursive_insert(bst<K,V,CO> &nt, bst<K,V,CO>::pair_type** contents,int n_elem, int start_pt)
+bst<K,V,CO> bst<K,V,CO>::deepcopy() const
+/*
+* genera un albero vuoto
+* condizione: copiato non ha null && find=end() (per evitare di copiare i figli due volte)
+* se condizione -> copia nodo e scendi;
+* altrimenti risali;
+* 
+*/
 {
-  nt.insert(std::move(*contents[start_pt+n_elem/2])); //THIS LEAVES *THIS IN AN UNSPECIFIED STATE, SO IT MUST BE MOVED AGAIN
-
-  int elem_first_half = n_elem/2;
-  int elem_second_half = n_elem-1-n_elem/2;
-
-  if(elem_first_half > 0) recursive_insert(nt,contents,elem_first_half,start_pt);
-  if(elem_second_half > 0) recursive_insert(nt,contents,elem_second_half,start_pt+elem_first_half+1);
-
-  return;
-}
-
-template<typename K, typename V, typename CO>
-void bst<K,V,CO>::balance()
-{
-  if(!size) return;
-
   bst nt {};
-  pair_type* contents[size];
-  
-  int i = 0;
-  for(iterator it = begin(); it != end(); ++it) { contents[i++] = &(*it);}
+  const_iterator position { root.get() };
 
-  recursive_insert(nt,contents,size,0);
-  *this = std::move(nt);
-}
-
-template<typename K, typename V, typename CO>
-typename bst<K,V,CO>::node* bst<K,V,CO>::node_begin() const 
-{
-  const_iterator position {root_it()};
-  if(position) { while(position.left()) position = position.left(); }
-
-  return static_cast<node*>(position);
-}
-
-template<typename K, typename V, typename CO>
-std::ostream& operator<<(std::ostream& os, const bst<K,V,CO>& x)
-{
-  os << "["<<x.size<<"] ";
-  for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") ";}
-  return os;
+  if(position) nt.insert(*position);
+  while(size > nt.get_size())
+  {
+    if(position.left() && !nt.find(position.left()->first)) 
+    { 
+      position = position.left(); 
+      nt.insert(*position); 
+    }
+    else if(position.right() && !nt.find(position.right()->first)) 
+    { 
+      position = position.right(); 
+      nt.insert(*position); 
+    }
+    else { position = position.parent(); }
+  }
+  return nt;
 }

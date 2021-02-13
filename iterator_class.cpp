@@ -9,8 +9,6 @@ class bst<K,V,CO>::iterator_class
     using pointer = typename std::conditional<c ,const T*, T*>::type;
     using reference  = typename std::conditional<c ,const T&, T&>::type;
 
-private:
-
     node* node_ptr;
 
     iterator_class& next();
@@ -37,6 +35,9 @@ public:
     reference operator * () const { return *(node_ptr->content); }  //error if nullptr / undefined behavior
     pointer operator -> () const { return node_ptr->content.get(); } //error if nullptr / undefined behavior
 
+    operator bool() const { return (bool)node_ptr; }
+    operator node*() const {return node_ptr; }
+
     iterator_class &operator ++() { return this->next(); }
     iterator_class operator ++(int)
     {
@@ -57,9 +58,6 @@ public:
     iterator_class left() const { return iterator_class((node_ptr->left_child).get()); }
     iterator_class right() const { return iterator_class((node_ptr->right_child).get()); }
     
-    operator bool() const { return (bool)node_ptr; }
-    operator node*() const {return node_ptr; }
-
     bst::childness childness() const 
     { 
       if(!parent()) return childness::orphan;
