@@ -4,7 +4,10 @@
 #include<memory>
 #include"bst.cpp"
 
-int main(int argc, char** argv)
+#include<vector>
+#include<map>
+
+int main(void)
 {
 
   #define K int
@@ -16,7 +19,7 @@ int main(int argc, char** argv)
   PT a {67,"zeb89"};
   my_bst.insert(a);
   my_bst.emplace(68,"zeb89 emplaced");
-  //my_bst.emplace(7,"numero massimo di ogni cosa");
+  my_bst.emplace(7,"numero massimo di ogni cosa");
   
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
@@ -37,6 +40,18 @@ int main(int argc, char** argv)
 
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
+
+  const std::map<K,V> m {{75,"berlino"},{1,"andiamo"},{3,"a"},{88,"Beppe!"},{60,"maanz"}};
+  std::map<K,V>::const_iterator itm = m.begin();
+  auto pt1 = &(*itm);
+  std::cout << itm->first << std::endl;
+  itm = m.find(88);
+  //auto pt2 = &(*itm);
+
+  auto b = std::move(*pt1);
+  std::cout << b.second << std::endl;
+  
+  for(auto itm : m) { std::cout << itm.second << std::endl; }
 
   return 0;
 }

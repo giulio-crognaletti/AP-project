@@ -32,7 +32,7 @@ bst<K,V,CO> bst<K,V,CO>::deepcopy() const
 
 template<typename K, typename V, typename CO>
 template<typename RT>
-std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::pinsert(RT&& x) // COS'E STO TYPE NAME??
+std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::_insert(RT&& x) // COS'E STO TYPE NAME??
 {
   iterator it = find(x.first);
   if(it) { return std::pair<iterator, bool>(it, false); }
@@ -41,7 +41,7 @@ std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::pinsert(RT&& x) // C
     iterator child, position = root_it();
     if(position) 
     {
-      while(child = op(x.first,position->first) ? position.left() : position.right()) { position = child; }
+      while((child = op(x.first,position->first) ? position.left() : position.right())) { position = child; } //Doulbe parenthesis as requested by the "-Wparenthesis warning"
 
       if(op(x.first,position->first)) 
       { 
@@ -146,18 +146,15 @@ void bst<K,V,CO>::clear_subtree (bst<K,V,CO>::iterator &a, bst<K,V,CO>::childnes
 };
 
 template<typename K, typename V, typename CO>
-void bst<K,V,CO>::rec_ins(bst<K,V,CO> &nt, bst<K,V,CO>::pair_type** contents,int n_elem, int start_pt)
+void bst<K,V,CO>::recursive_insert(bst<K,V,CO> &nt, bst<K,V,CO>::pair_type** contents,int n_elem, int start_pt)
 {
   nt.insert(std::move(*contents[start_pt+n_elem/2])); //THIS LEAVES *THIS IN AN UNSPECIFIED STATE, SO IT MUST BE MOVED AGAIN
 
-  if(n_elem > 1)
-  {
-    int elem_first_half = n_elem/2;
-    rec_ins(nt,contents,elem_first_half,start_pt);
+  int elem_first_half = n_elem/2;
+  int elem_second_half = n_elem-1-n_elem/2;
 
-    int elem_second_half = n_elem-1-n_elem/2;
-    rec_ins(nt,contents,elem_second_half,start_pt+elem_first_half+1);
-  }
+  if(elem_first_half > 0) recursive_insert(nt,contents,elem_first_half,start_pt);
+  if(elem_second_half > 0) recursive_insert(nt,contents,elem_second_half,start_pt+elem_first_half+1);
 
   return;
 }
@@ -173,6 +170,23 @@ void bst<K,V,CO>::balance()
   int i = 0;
   for(iterator it = begin(); it != end(); ++it) { contents[i++] = &(*it);}
 
-  rec_ins(nt,contents,size,0);  //COME FACCIO AD ESSERE SICURO DELL'ORDINE DELLA RICORSIONE?
+  recursive_insert(nt,contents,size,0);
   *this = std::move(nt);
+}
+
+template<typename K, typename V, typename CO>
+typename bst<K,V,CO>::node* bst<K,V,CO>::node_begin() const 
+{
+  const_iterator position {root_it()};
+  if(position) { while(position.left()) position = position.left(); }
+
+  return static_cast<node*>(position);
+}
+
+template<typename K, typename V, typename CO>
+std::ostream& operator<<(std::ostream& os, const bst<K,V,CO>& x)
+{
+  os << "["<<x.size<<"] ";
+  for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") ";}
+  return os;
 }

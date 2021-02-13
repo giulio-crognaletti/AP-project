@@ -30,9 +30,9 @@ class bst
   {
     //pair_type content;
     std::unique_ptr<pair_type> content;
+    node* parent;
     std::unique_ptr<node> left_child;
     std::unique_ptr<node> right_child;
-    node* parent;
 
     node(pair_type &&c, node* p): content{new pair_type(std::move(c))}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
     node(const pair_type &c, node* p): content{new pair_type(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
@@ -44,8 +44,9 @@ class bst
    * The tree is represented by a pointer to the root node and its size (the number of nodes)
    * It also stores the comparison operator object-function => op
    */
-  std::unique_ptr<node> root;
+
   std::size_t size;
+  std::unique_ptr<node> root;
 
   inline static constexpr comparison_operator op {};
 
@@ -61,7 +62,8 @@ public:
   bst() = default;
   ~bst() = default;
 
-  //custom ctor: controllare exception
+  //custom ctor: controllare exception -- CONTROLLARE UNICITA' DELLE KEY AmbiguosKeysException : Two matching keys with different values. What should I insert?
+  //controllare il numero di volte in cui il costruttore viene chiamato - 1.20h vector
   bst(std::initializer_list<pair_type> lst) : size{0}, root{nullptr} { for(auto i : lst) insert(i); }
   
   //copy (deepcopy) and move semantics
@@ -75,8 +77,8 @@ public:
   
   std::size_t get_size() { return size; }
 
-  std::pair<iterator, bool> insert(const pair_type& x) { return pinsert(x); }
-  std::pair<iterator, bool> insert(pair_type&& x) { return pinsert(std::move(x)); }
+  std::pair<iterator, bool> insert(const pair_type& x) { return _insert(x); }
+  std::pair<iterator, bool> insert(pair_type&& x) { return _insert(std::move(x)); }
   
   iterator find(const key_type& x) { return iterator(node_find(x)); }
   const_iterator find(const key_type& x) const { return const_iterator(node_find(x)); }
@@ -104,12 +106,8 @@ public:
   void erase(const key_type& x);
   void balance();
 
-  friend
-  std::ostream& operator<<(std::ostream& os, const bst& x)
-  {
-    for(auto it : x){ os << "(" << it.first << " : "<< it.second << ") ";}
-    return os;
-  }
+  template<typename _K, typename _V, typename _CO>
+  friend std::ostream& operator<<(std::ostream& os, const bst<_K,_V,_CO>& x);
 
 
 private:
@@ -118,23 +116,17 @@ private:
   */
 
   node* node_find(const key_type& x) const;
-  node* node_begin() const 
-  {
-    const_iterator position {root_it()};
-    if(position) { while(position.left()) position = position.left(); }
-
-    return static_cast<node*>(position);
-  }
+  node* node_begin() const ;
   node* node_end() const { return nullptr; }
 
   template<typename RT>
-  std::pair<iterator, bool> pinsert(RT&& x);
+  std::pair<iterator, bool> _insert(RT&& x);
 
   template<typename RT>
   value_type& subscript(RT&& x);
 
   void clear_subtree (iterator &a, childness ch);
-  void rec_ins(bst &nt, pair_type** contents,int n_elem, int start_pt);
+  void recursive_insert(bst &nt, pair_type** contents,int n_elem, int start_pt);
 };
 
 #include "iterator_class.cpp"

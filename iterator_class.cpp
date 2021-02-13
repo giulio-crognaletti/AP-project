@@ -34,8 +34,8 @@ public:
 
     bool operator == (const iterator_class i) const { return node_ptr == i.node_ptr; }
     bool operator != (const iterator_class i) const { return node_ptr != i.node_ptr; }
-    reference operator * () const { return *(node_ptr->content); } 
-    pointer operator -> () const { return node_ptr->content.get(); } 
+    reference operator * () const { return *(node_ptr->content); }  //error if nullptr / undefined behavior
+    pointer operator -> () const { return node_ptr->content.get(); } //error if nullptr / undefined behavior
 
     iterator_class &operator ++() { return this->next(); }
     iterator_class operator ++(int)
