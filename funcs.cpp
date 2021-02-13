@@ -9,22 +9,23 @@ bst<K,V,CO> bst<K,V,CO>::deepcopy() const
 */
 {
   bst nt {};
-  node *position = root.get();
+  const_iterator position {root_it()};
 
-  if(position) nt.insert(position->content);
+  if(position) nt.insert(*position);
   while(size > nt.get_size())
   {
-    if(position->left_child && (nt.find((position->left_child->content).first) == nt.end())) 
+    std::cout << nt.get_size() <<std::endl;
+    if(position.left() && !nt.find(position.left()->first)) 
     { 
-      position = position->left_child.get(); 
-      nt.insert(position->content); 
+      position = position.left(); 
+      nt.insert(*position); 
     }
-    else if(position->right_child && (nt.find((position->right_child->content).first) == nt.end())) 
+    else if(position.right() && !nt.find(position.right()->first)) 
     { 
-      position = position->right_child.get(); 
-      nt.insert(position->content); 
+      position = position.right(); 
+      nt.insert(*position); 
     }
-    else { position = position->parent; }
+    else { position = position.parent(); }
   }
   return nt;
 }
@@ -34,25 +35,33 @@ template<typename RT>
 std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::pinsert(RT&& x) // COS'E STO TYPE NAME??
 {
   iterator it = find(x.first);
-  if(it != end()) { return std::pair<iterator, bool>(it, false); }
+  if(it) { return std::pair<iterator, bool>(it, false); }
   else 
   {
-    node *child, *position = root.get();
+    iterator child, position = root_it();
     if(position) 
     {
-      while(child = op(x.first,(position->content).first) ? (position->left_child).get() : (position->right_child).get()) { position = child; }
+      while(child = op(x.first,position->first) ? position.left() : position.right()) { position = child; }
 
-      if(op(x.first,(position->content).first)) { (position->left_child).reset(new node(std::forward<RT>(x),position)); child = (position->left_child).get(); } 
-      else { (position->right_child).reset(new node(std::forward<RT>(x),position)); child = (position->right_child).get(); }
+      if(op(x.first,position->first)) 
+      { 
+        (static_cast<node*>(position)->left_child).reset(new node(std::forward<RT>(x),static_cast<node*>(position)));
+        child = position.left();
+      } 
+      else 
+      { 
+        (static_cast<node*>(position)->right_child).reset(new node(std::forward<RT>(x),static_cast<node*>(position)));
+        child = position.right(); 
+      }
 
       ++size;
-      return std::pair<iterator, bool>(iterator(child), true);
+      return std::pair<iterator, bool>(child, true);
     }
     else
     {
       root.reset(new node(std::forward<RT>(x),nullptr));
       ++size;
-      return std::pair<iterator, bool>(iterator(root.get()), true);
+      return std::pair<iterator, bool>(root_it(), true);
     }
   }
 }
@@ -60,11 +69,11 @@ std::pair<typename bst<K,V,CO>::iterator,bool> bst<K,V,CO>::pinsert(RT&& x) // C
 template<typename K, typename V, typename CO>
 typename bst<K,V,CO>::node* bst<K,V,CO>::node_find(const typename bst<K,V,CO>::key_type& x) const //DI NUOVO STO TYPRNAME?
 {
-  node *position = root.get();
+  const_iterator position = root_it();
   while(position)
   {
-    if((position->content).first == x) { return position; }
-    position = op(x,(position->content).first) ? (position->left_child).get() : (position->right_child).get();
+    if(position->first == x) { return static_cast<node*>(position); }
+    position = op(x,position->first) ? position.left() : position.right();
   }
   return nullptr;
 }
@@ -77,110 +86,93 @@ typename bst<K,V,CO>::value_type& bst<K,V,CO>::subscript(RT&& x)
   if(!it) 
   {
     V val {};
-    it = emplace(std::forward(x), val).first;
+    it = emplace(std::forward<RT>(x), val).first;
   }
   return it->second;
 }
-/*
+
 template<typename K, typename V, typename CO>
 void bst<K,V,CO>::erase(const bst<K,V,CO>::key_type& x) 
 {
   iterator found = find(x);
   iterator position {found};
+  childness ch {position.childness()};
+
   if (position) 
   {  
     while (position.right())
     {
-      swap(++position, found);
-      position = found;
+      ++position;
+      ch = position.childness();
+      std::swap(static_cast<node*>(position)->content, static_cast<node*>(found)->content);
+      found = position;
     }
     while (position.left())
     {
-      swap(--position, found);
-      position = found;
+      --position;
+      ch = position.childness();
+      std::swap(static_cast<node*>(position)->content, static_cast<node*>(found)->content);
+      found = position;
     }
 
-    clear_subtree(found);
+    clear_subtree(position, ch);
     --size;
   }
 }
 
 template<typename K, typename V, typename CO>
-void bst<K,V,CO>::swap(bst<K,V,CO>::iterator &a, bst<K,V,CO>::iterator &b)
-{
-    std::unique_ptr<node>* a_ptr;
-    std::unique_ptr<node>* b_ptr;
-
-    switch (a.childness())
-    {
-      case iterator::childness::right:
-        a_ptr = &(((node*)a.parent())->right_child);
-        break;
-
-      case iterator::childness::left:
-        a_ptr = &(((node*)a.parent())->left_child);
-        break;
-
-      case iterator::childness::orphan:
-        a_ptr = &root;
-        break;
-
-      default:
-        break;
-    }
-    
-    switch (b.childness())
-    {
-      case iterator::childness::right:
-        b_ptr = &(((node*)b.parent())->right_child);
-        break;
-
-      case iterator::childness::left:
-        b_ptr = &(((node*)b.parent())->left_child);
-        break;
-
-      case iterator::childness::orphan:
-        b_ptr = &root;
-        break;
-
-      default:
-        break;
-    }
- 
-    node* node_a = (node*)a;
-    node* node_b = (node*)b;
-
-    std::swap(node_a->parent, node_b->parent);
-
-    if(node_a->left_child == node_b) std::swap(node_a->left_child, node_b->left_child);
-    else if(node_b->left_child == node_a) std::swap(node_a->left_child, node_b->left_child);
-    else std::swap(node_a->left_child, node_b->left_child);
-
-    std::swap( node_a->right_child, node_b->right_child);
-    std::swap(*a_ptr, *b_ptr);
-}
-
-template<typename K, typename V, typename CO>
-void bst<K,V,CO>::clear_subtree (bst<K,V,CO>::iterator &a) 
+void bst<K,V,CO>::clear_subtree (bst<K,V,CO>::iterator &a, bst<K,V,CO>::childness ch) 
 {
   std::unique_ptr<node>* a_ptr;
-  switch (a.childness())
+  switch (ch)
   {
-    case iterator::childness::right:
-      a_ptr = &(((node*)a.parent())->right_child);
+    case childness::right:
+      a_ptr = &(static_cast<node*>(a.parent())->right_child);
       break;
 
-    case iterator::childness::left:
-      a_ptr = &(((node*)a.parent())->left_child);
+    case childness::left:
+      a_ptr = &(static_cast<node*>(a.parent())->left_child);
       break;
 
-    case iterator::childness::orphan:
-      a_ptr = &root;
+    case childness::orphan:
+      a_ptr = &(this->root);
       break;
 
-    default:
+    default: //THROW EXCEPTION MAYBE?
       break;
   }
 
   a_ptr->reset(nullptr);
-};*/
+};
+
+template<typename K, typename V, typename CO>
+void bst<K,V,CO>::rec_ins(bst<K,V,CO> &nt, bst<K,V,CO>::pair_type** contents,int n_elem, int start_pt)
+{
+  nt.insert(std::move(*contents[start_pt+n_elem/2])); //THIS LEAVES *THIS IN AN UNSPECIFIED STATE, SO IT MUST BE MOVED AGAIN
+
+  if(n_elem > 1)
+  {
+    int elem_first_half = n_elem/2;
+    rec_ins(nt,contents,elem_first_half,start_pt);
+
+    int elem_second_half = n_elem-1-n_elem/2;
+    rec_ins(nt,contents,elem_second_half,start_pt+elem_first_half+1);
+  }
+
+  return;
+}
+
+template<typename K, typename V, typename CO>
+void bst<K,V,CO>::balance()
+{
+  if(!size) return;
+
+  bst nt {};
+  pair_type* contents[size];
+  
+  int i = 0;
+  for(iterator it = begin(); it != end(); ++it) { contents[i++] = &(*it);}
+
+  rec_ins(nt,contents,size,0);  //COME FACCIO AD ESSERE SICURO DELL'ORDINE DELLA RICORSIONE?
+  *this = std::move(nt);
+}

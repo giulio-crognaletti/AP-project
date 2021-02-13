@@ -28,15 +28,14 @@ class bst
    * 
    */
   {
-    pair_type content;
-    //std::unique_ptr<pair_type> content;
+    //pair_type content;
+    std::unique_ptr<pair_type> content;
     std::unique_ptr<node> left_child;
     std::unique_ptr<node> right_child;
     node* parent;
 
-    node(pair_type c, node* p): content{c}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
-    //node(pair_type &&c, node* p): content{new pair_type(std::move(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
-    //node(const pair_type &c, node* p): content{new pair_type(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
+    node(pair_type &&c, node* p): content{new pair_type(std::move(c))}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
+    node(const pair_type &c, node* p): content{new pair_type(c)}, parent{p}, left_child{nullptr}, right_child{nullptr} {}
 
     explicit node(node* p): content{}, parent{p} ,left_child{nullptr}, right_child{nullptr} {}
   };
@@ -54,6 +53,7 @@ public:
 
   template<bool c>
   class iterator_class;
+  enum class childness {right, left, orphan};
 
   using iterator = iterator_class<false>;
   using const_iterator = iterator_class<true>;
@@ -89,6 +89,10 @@ public:
   const_iterator end() const { return cend(); } 
   const_iterator cend() const { return const_iterator(node_end()); }
 
+  iterator root_it() { return iterator(root.get()); }
+  const_iterator root_it() const { return croot_it(); } 
+  const_iterator croot_it() const { return const_iterator(root.get()); }
+
   void clear() { size = 0; root.reset(nullptr); }
 
   template< class... Types >
@@ -98,11 +102,7 @@ public:
   value_type& operator[](key_type&& x) { return subscript(std::move(x)); };
 
   void erase(const key_type& x);
-
-  /*
   void balance();
-  void erase(const key_type& x);
-  */
 
   friend
   std::ostream& operator<<(std::ostream& os, const bst& x)
@@ -120,10 +120,10 @@ private:
   node* node_find(const key_type& x) const;
   node* node_begin() const 
   {
-    node *position  = root.get();
-    if(position) { while(position->left_child) position = (position->left_child).get(); }
+    const_iterator position {root_it()};
+    if(position) { while(position.left()) position = position.left(); }
 
-    return position;
+    return static_cast<node*>(position);
   }
   node* node_end() const { return nullptr; }
 
@@ -133,9 +133,8 @@ private:
   template<typename RT>
   value_type& subscript(RT&& x);
 
-
-  void swap(iterator &a, iterator &b);
-  void clear_subtree (iterator &a);
+  void clear_subtree (iterator &a, childness ch);
+  void rec_ins(bst &nt, pair_type** contents,int n_elem, int start_pt);
 };
 
 #include "iterator_class.cpp"

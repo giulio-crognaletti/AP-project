@@ -15,29 +15,28 @@ int main(int argc, char** argv)
 
   PT a {67,"zeb89"};
   my_bst.insert(a);
-  my_bst.emplace(67,"zeb89 emplaced");
+  my_bst.emplace(68,"zeb89 emplaced");
+  //my_bst.emplace(7,"numero massimo di ogni cosa");
   
   std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
   std::cout << my_bst << std::endl;
-
-  bst<K,V> my_bst2 {my_bst};
-
-  std::cout << "Binary Search Tree: list of all " << my_bst2.get_size() << " (key,value) pairs. \n => ";
-  std::cout << my_bst2 << std::endl;
-
-  //my_bst2.erase(3);
-
-  //std::cout << "Binary Search Tree: list of all " << my_bst2.get_size() << " (key,value) pairs. \n => ";
-  bst<K,V>::iterator it {my_bst2.begin()};
-  //std::cout << my_bst2 << std::endl;
   
-  /*const bst<K,V> my_bst2 {{75,"berlino"},{1,"andiamo"},{3,"a"},{88,"Beppe!"},{60,"maanz"}};
-  c_it = my_bst2.find(75);
-  std::cout << c_it->second << std::endl;
-  std::cout << my_bst2 << std::endl;*/
+  my_bst.balance();
+
+  /*
+  my_bst.erase(88);
+  my_bst.erase(75);
+  my_bst.erase(60); 
+  */
+
+  bst<K,V>::iterator it {my_bst.root_it()};
+  std::cout << it->first << std::endl;
+  std::cout << it.left()->first << std::endl;
+  std::cout << it.right()->first << std::endl;
+
+
+  std::cout << "Binary Search Tree: list of all " << my_bst.get_size() << " (key,value) pairs. \n => ";
+  std::cout << my_bst << std::endl;
 
   return 0;
-
-  // L'ALGORITMO DI NEXT() AVEVA UN PICCOLO PROBLEMINO CHE GENERAVA UN LOOP INFINTO... ORA DOVREBBE ESSERE SISTEMATO MA MEGLIO RICONTROLLARLO
-  // TUTTO QUELLO CHE HO PROVATO SEMBRA ANDARE, SONO LE 2.30am MA SONO FELICE COMUNQUE AHAHAA
 }

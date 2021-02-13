@@ -18,8 +18,6 @@ private:
 
 public:
 
-    enum class childness {right, left, orphan};
-
     //ctors -> EXCEPTIONS
     iterator_class() = default;
     iterator_class(const iterator_class &) = default;
@@ -36,8 +34,8 @@ public:
 
     bool operator == (const iterator_class i) const { return node_ptr == i.node_ptr; }
     bool operator != (const iterator_class i) const { return node_ptr != i.node_ptr; }
-    reference operator * () const { return node_ptr->content; } 
-    pointer operator -> () const { return &(node_ptr->content); } 
+    reference operator * () const { return *(node_ptr->content); } 
+    pointer operator -> () const { return node_ptr->content.get(); } 
 
     iterator_class &operator ++() { return this->next(); }
     iterator_class operator ++(int)
@@ -62,10 +60,10 @@ public:
     operator bool() const { return (bool)node_ptr; }
     operator node*() const {return node_ptr; }
 
-    childness childness() const 
+    bst::childness childness() const 
     { 
-      if(!node_ptr->parent) return childness::orphan;
-      return op((node_ptr->parent->content).first,(node_ptr->content).first) ? childness::right : childness::left; 
+      if(!parent()) return childness::orphan;
+      return op((*this)->first,parent()->first) ? childness::left : childness::right; 
     }
 };
 
@@ -84,16 +82,16 @@ bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::next()
 * The final node is the one for wich no node satisfies the request, and it must return nullptr as a result. 
 */ 
 {
-    if (node_ptr->right_child) //Do I have a right child? YES...
+    if (right()) //Do I have a right child? YES...
     {
-        node_ptr = (node_ptr->right_child).get();
-        while (node_ptr->left_child) { node_ptr = (node_ptr->left_child).get(); }
+        *this = right();
+        while(left()) { *this = left(); }
     }
     else //NO ...
     {
-        while (node_ptr->parent && !bst::op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
-        if (!node_ptr->parent) { node_ptr = nullptr; } 
-        else { node_ptr = node_ptr->parent; }
+        while (parent() && !bst::op((*this)->first,parent()->first)) { *this = parent(); }
+        if (!parent()) { *this = iterator_class(nullptr); } //I have reached the end of the tree
+        else { *this = parent(); }
     }
 
     return *this;
@@ -109,16 +107,16 @@ bst<K,V,CO>::iterator_class<c>& bst<K,V,CO>::iterator_class<c>::prev()
 * This of course implies also swapping right and left child (e.g. The question should be "Has my node a LEFT child?" this time)
 */
 {
-    if (node_ptr->left_child)
+    if (left())
     {
-        node_ptr = (node_ptr->left_child).get();
-        while (node_ptr->right_child) { node_ptr = (node_ptr->right_child).get(); }
+        *this = left();
+        while (right()) { *this = right(); }
     }
     else 
     {
-        while (node_ptr->parent && bst::op((node_ptr->content).first,(node_ptr->parent->content).first)) { node_ptr = node_ptr->parent; }
-        if (!node_ptr->parent) { node_ptr = nullptr; }
-        else { node_ptr = node_ptr->parent; } 
+        while (parent() && bst::op((*this)->first,parent()->first)) { *this = parent(); }
+        if (!parent()) { *this = iterator_class(nullptr); }
+        else { *this = parent(); } 
     }
 
     return *this;
