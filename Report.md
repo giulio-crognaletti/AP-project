@@ -58,4 +58,13 @@ We tried also another algorithm, where we use comprehensions. First we create th
 
 The second algorithm results to be slower than the first one, the first one use more resources in terms of memory and theoretical time.
 
- ## Benchmark
+## Benchmark
+ 
+ 
+To benchmark our bst implementation, we observed the time performance of the function ```find```,and compared it to ```std::map``` which uses a similar structure  and has the same function. To do this we built a randomly filled tree with an increasing number of nodes and searched for a random key. Since our tree is not   self  balanced, and this impacts on complexity, we also tried to balance it before applying the function. These are the obtained results:  
+ 
+ ![](benchmark.png)
+ 
+ We can observe that the time follow a logaritmic curve as expected, being ```find``` a binary search.
+ 
+ 
