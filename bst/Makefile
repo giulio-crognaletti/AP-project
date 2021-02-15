@@ -7,4 +7,4 @@ test: bst.cpp bst.hpp iterator.hpp iterator.cpp test.cpp
 .PHONY: clean
 
 clean:
-	rm main
+	rm test
