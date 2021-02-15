@@ -6,8 +6,8 @@ Authors Giulio Crognaletti and Giulia Marchiori Pietrosanti
 For our implementation of a Binary Search Tree, we used a class templated over ```key_type``` , ```value_type``` and ```comparison_operator```named ```bst```. The class uses a set of different substructures defined within it, such as ```node``` and ```iterator```, that will be briefly presented in the following report. \\
 First, ```bst``` has the following attributes:
 
-* ```std::unique\_ptr<node>  root```
-* ```std::size\_t   size```
+* ``` std::unique_ptr<node>  root```
+* ``` std::size_t   size```
 
 plus a static member defined as ```inline static constexpr comparison_operator```
 
@@ -20,7 +20,7 @@ It has 3 constructors, the default, move and a custom copy constructor that perf
 
 * ```std::unique_ptr<pair_type>``` where ```pair_type``` is defined as ```std::pair<const key_type, value_type>```
 * ```std::unique_ptr<node>``` to a possible left child
-* ```std::unique\_ptr<node>``` to a possible right child
+* ```std::unique_ptr<node>``` to a possible right child
 * An ordinary pointer to the parent.
 
 The root will be the only node with a null pointer to the parent. The content is stored in the heap using a ```std::unique_ptr<pair_type>``` to make easier and cheaper the swapping of the content between the nodes (which is useful to make an efficient erase of a given key). Children use smart pointers because the are meant to own all subsequent nodes, while parent use a ordinary pointer because it is just a utility helpful in navigating the tree.
@@ -57,3 +57,5 @@ The first uses two nested for constructs to cycle over all values in each list, 
 We tried also another algorithm, where we use comprehensions. First we create the set with all the new keys (to avoid repetitions), then we create the reversed dictionary by associating a list comprehension to each element.
 
 The second algorithm results to be slower than the first one, the first one use more resources in terms of memory and theoretical time.
+
+ ## Benchmark
